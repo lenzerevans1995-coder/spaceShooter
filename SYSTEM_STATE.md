@@ -57,7 +57,7 @@
 |---|----------|--------|
 | D1 | Render pipeline = URP | LOCKED (project default) |
 | D2 | Input = new Input System | LOCKED |
-| D3 | Bullet logic = custom batched code movers (BulletManager); pack art is visual-only. Primary art = **Master Stylized Projectile v1.0** (Shuriken, 43 MB) | LOCKED (user-approved) |
+| D3 | Bullet logic = custom batched code movers (BulletManager). Visual = **Master Stylized Projectile** prefabs (imported, URP ShaderGraph, no ProjectSettings overwrite). Player=SmallEnergyBullet, Enemy=SmallFireBullet, cloned as pooled bullet visuals (no mover scripts; particles restart on spawn). 124 bullets @ 159 fps. | DONE |
 | D4 | Skill tree = SimpleTalentTreeUi as-is, mapped to 3 pools | PROPOSED |
 | D5 | UI = ModularGameUIKit, single persistent UI scene + additive gameplay | PROPOSED |
 | D6 | Styling = **both** FlatKit + PotaToon (PotaToon imported, compiles clean on URP 17.4) | LOCKED (user-approved) |

@@ -50,6 +50,11 @@ namespace SpaceShooter.Flow
         public bool showHitboxRing = false;        // debug-only faction/hitbox disc under ships
         [Range(0f, 1f)] public float factionTint = 0.5f;
 
+        [Header("Projectile VFX (Master Stylized Projectile prefabs; null = glowing sphere)")]
+        public GameObject playerProjectile;
+        public GameObject enemyProjectile;
+        public float projectileScale = 1f;
+
         [Header("Testing")]
         public bool autoDemo = true;
 
@@ -65,10 +70,13 @@ namespace SpaceShooter.Flow
 
             BuildPostProcessing(); // global bloom so emissive bullets glow
 
-            _playerBullet = BuildBullet("PlayerBullet", new Color(0.35f, 0.95f, 1f));
-            _enemyBullet = BuildBullet("EnemyBullet", new Color(1f, 0.45f, 0.55f));
-            BulletManager.Instance.PrewarmType(_playerBullet, 800);
-            BulletManager.Instance.PrewarmType(_enemyBullet, 1600);
+            _playerBullet = BuildBullet("PlayerBullet", new Color(0.35f, 0.95f, 1f), playerProjectile);
+            _enemyBullet = BuildBullet("EnemyBullet", new Color(1f, 0.45f, 0.55f), enemyProjectile);
+            // Particle projectiles are heavier than primitives — prewarm modestly.
+            int pwP = playerProjectile != null ? 250 : 800;
+            int pwE = enemyProjectile != null ? 450 : 1600;
+            BulletManager.Instance.PrewarmType(_playerBullet, pwP);
+            BulletManager.Instance.PrewarmType(_enemyBullet, pwE);
 
             _field = new GameObject("CombatField").AddComponent<CombatField>();
             _field.SetRadius(fieldRadius);
@@ -282,15 +290,29 @@ namespace SpaceShooter.Flow
             return Mathf.Max(0.4f, Mathf.Min(ex, ez));
         }
 
-        GameObject BuildBullet(string name, Color color)
+        GameObject BuildBullet(string name, Color color, GameObject projectilePrefab)
         {
-            var go = GameObject.CreatePrimitive(PrimitiveType.Sphere);
-            go.name = name;
-            var col = go.GetComponent<Collider>(); if (col != null) Destroy(col);
-            go.transform.localScale = Vector3.one * 0.7f;
-            var mr = go.GetComponent<MeshRenderer>();
-            var sh = Shader.Find("Universal Render Pipeline/Unlit"); if (sh == null) sh = Shader.Find("Unlit/Color");
-            if (sh != null) mr.sharedMaterial = new Material(sh) { color = color * 3.5f }; // HDR so Bloom makes it glow
+            GameObject go;
+            if (projectilePrefab != null)
+            {
+                // Use a Master Stylized Projectile VFX prefab as the bullet visual; our Bullet
+                // component drives movement (the prefabs have no mover scripts).
+                go = Instantiate(projectilePrefab);
+                go.name = name;
+                go.transform.localScale = Vector3.one * projectileScale;
+                foreach (var c in go.GetComponentsInChildren<Collider>(true)) Destroy(c);
+            }
+            else
+            {
+                // Fallback: glowing HDR sphere (also used by the stress-test scene).
+                var sh = Shader.Find("Universal Render Pipeline/Unlit"); if (sh == null) sh = Shader.Find("Unlit/Color");
+                go = GameObject.CreatePrimitive(PrimitiveType.Sphere);
+                go.name = name;
+                var col = go.GetComponent<Collider>(); if (col != null) Destroy(col);
+                go.transform.localScale = Vector3.one * 0.7f;
+                go.GetComponent<MeshRenderer>().sharedMaterial = new Material(sh) { color = color * 3.5f };
+            }
+
             go.AddComponent<Bullet>();
             go.SetActive(false);
             return go;

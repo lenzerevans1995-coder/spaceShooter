@@ -18,6 +18,7 @@ namespace SpaceShooter.BulletHell
         BulletBehavior _behavior;
         float _bp1, _bp2;
         Transform _tf;
+        ParticleSystem[] _particles;   // optional VFX (pack projectiles); restarted on spawn for pooling
 
         /// <summary>The prefab this instance was pooled from. Set once by BulletPool.</summary>
         public GameObject PrefabKey { get; internal set; }
@@ -27,7 +28,11 @@ namespace SpaceShooter.BulletHell
         public float Radius => _radius;
         public Vector3 Position => _tf.position;
 
-        void Awake() { _tf = transform; }
+        void Awake()
+        {
+            _tf = transform;
+            _particles = GetComponentsInChildren<ParticleSystem>(true); // empty for primitive bullets
+        }
 
         /// <summary>Configure a freshly-pooled bullet and place it in the world.</summary>
         public void Spawn(in BulletSpawnParams p)
@@ -48,6 +53,16 @@ namespace SpaceShooter.BulletHell
             _bp1 = p.behaviorParam1;
             _bp2 = p.behaviorParam2;
             FaceDirection();
+
+            // Restart any VFX so pooled particle projectiles don't show stale state.
+            if (_particles != null)
+            {
+                for (int i = 0; i < _particles.Length; i++)
+                {
+                    _particles[i].Clear(true);
+                    _particles[i].Play(true);
+                }
+            }
         }
 
         /// <summary>
@@ -118,6 +133,7 @@ namespace SpaceShooter.BulletHell
 
         void FaceDirection()
         {
+            // Orient the projectile's forward (+Z) along travel. Pack VFX emit along forward.
             if (_direction.sqrMagnitude > 1e-4f)
                 _tf.rotation = Quaternion.LookRotation(_direction, Vector3.up);
         }
