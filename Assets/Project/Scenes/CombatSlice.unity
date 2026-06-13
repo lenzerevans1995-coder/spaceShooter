@@ -295,9 +295,9 @@ MonoBehaviour:
   potaToonOutline: 0.15
   showHitboxRing: 0
   factionTint: 0.5
-  playerProjectile: {fileID: 132410131150665497, guid: 932b95bdb7e66f74eaa86d179524a1a1, type: 3}
-  enemyProjectile: {fileID: 1961964258596952, guid: eca1ff6741def5a468081e17839fc91e, type: 3}
-  projectileScale: 1
+  playerProjectile: {fileID: 1287730090610360, guid: ada9d5c31c0e29b41bc5056c16b70b62, type: 3}
+  enemyProjectile: {fileID: 1916600279156190, guid: 8b258b932753a4c4c988b8527c8273e4, type: 3}
+  projectileScale: 3
   thrusterVFX: {fileID: 6286345892844241114, guid: 1300c0a3cbedce2418af45b95ad08a02, type: 3}
   thrusterScale: 4
   autoDemo: 1
