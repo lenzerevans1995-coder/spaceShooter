@@ -320,12 +320,15 @@ namespace SpaceShooter.Flow
             GameObject go;
             if (projectilePrefab != null)
             {
-                // Use a Master Stylized Projectile VFX prefab as the bullet visual; our Bullet
-                // component drives movement (the prefabs have no mover scripts).
+                // Use a VFX projectile prefab as the bullet VISUAL only. Strip the pack's own
+                // mover script + Rigidbody + colliders so OUR Bullet drives movement — otherwise
+                // they fight (frozen/erratic bullets) and pooled reuse misbehaves.
                 go = Instantiate(projectilePrefab);
                 go.name = name;
                 go.transform.localScale = Vector3.one * projectileScale;
-                foreach (var c in go.GetComponentsInChildren<Collider>(true)) Destroy(c);
+                foreach (var mb in go.GetComponentsInChildren<MonoBehaviour>(true)) if (mb != null) DestroyImmediate(mb);
+                foreach (var rb in go.GetComponentsInChildren<Rigidbody>(true)) DestroyImmediate(rb);
+                foreach (var c in go.GetComponentsInChildren<Collider>(true)) DestroyImmediate(c);
             }
             else
             {
