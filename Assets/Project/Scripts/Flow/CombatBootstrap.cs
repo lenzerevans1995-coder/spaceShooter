@@ -173,10 +173,11 @@ namespace SpaceShooter.Flow
 
         AttackPatternSO BuildPlayerPattern()
         {
-            var f = ScriptableObject.CreateInstance<FanEmitter>();
-            f.bulletPrefab = _playerBullet; f.count = 3; f.arcDegrees = 9f;
-            f.speed = 34f; f.lifetime = 2.2f; f.damage = 2.5f; f.radius = 0.4f;
-            return f;
+            // One projectile per shot — each authored fire point (cannon) fires a single bolt.
+            var a = ScriptableObject.CreateInstance<AimedShot>();
+            a.bulletPrefab = _playerBullet; a.count = 1;
+            a.speed = 34f; a.lifetime = 2.2f; a.damage = 2.5f; a.radius = 0.4f;
+            return a;
         }
 
         AttackPatternSO BuildEnemyPattern()
@@ -297,7 +298,9 @@ namespace SpaceShooter.Flow
             {
                 var fx = Instantiate(thrusterVFX, tp);
                 fx.transform.localPosition = Vector3.zero;
-                fx.transform.localRotation = Quaternion.identity;
+                // Point the flame out the BACK of the ship (engines exhaust rearward), regardless
+                // of how the thruster point was rotated.
+                fx.transform.rotation = Quaternion.LookRotation(-model.transform.forward, model.transform.up);
                 fx.transform.localScale = Vector3.one * thrusterScale;
             }
         }
@@ -329,6 +332,12 @@ namespace SpaceShooter.Flow
                 foreach (var mb in go.GetComponentsInChildren<MonoBehaviour>(true)) if (mb != null) DestroyImmediate(mb);
                 foreach (var rb in go.GetComponentsInChildren<Rigidbody>(true)) DestroyImmediate(rb);
                 foreach (var c in go.GetComponentsInChildren<Collider>(true)) DestroyImmediate(c);
+                // TrailRenderers streak a line from the bullet's previous pooled position to its new
+                // spawn — strip them (and any LineRenderers) so pooled bullets are clean discrete bolts.
+                foreach (var tr in go.GetComponentsInChildren<TrailRenderer>(true)) DestroyImmediate(tr);
+                foreach (var lr in go.GetComponentsInChildren<LineRenderer>(true)) DestroyImmediate(lr);
+                // Local sim so trail particles stay with the bullet (no world-space "line" streaks).
+                foreach (var ps in go.GetComponentsInChildren<ParticleSystem>(true)) { var m = ps.main; m.simulationSpace = ParticleSystemSimulationSpace.Local; }
             }
             else
             {
