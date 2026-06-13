@@ -74,9 +74,10 @@
 - **B3 — FlatKit URP** package present in-project but still packed (`[Render Pipeline] Universal (URP).unitypackage`).
   Needed before FlatKit shaders/ColorSwapper can tint ships (Phase 5/8).
 - Note: a **newer Synty SciFiSpace v1.14** and **Flat Kit v4.9.9 (full)** also exist on the drive if we want upgrades.
-- **B4 — PotaToon needs its Renderer Feature.** PotaToon/Toon material swap alone renders flat grey/pink;
-  the `PotaToonFeature` must be added to Mobile_Renderer.asset + PC_Renderer.asset, then tune cel/outline
-  (outline must be ~0.1–0.2, not 2.5). Code path exists (`CombatBootstrap.usePotaToon`, default OFF). Pending a focused styling pass.
+- ~~B4 — PotaToon needs its Renderer Feature.~~ RESOLVED. PotaToonFeature added to PC_Renderer + Mobile_Renderer.
+  Working approach: `CombatBootstrap.ApplyPotaToon` CLONES a real PotaToon material (`potaToonReference` = body.mat)
+  so shader keywords carry over (a bare `new Material(PotaToon/Toon)` renders black). Albedo transferred from Synty
+  `_Albedo_Map`/`_Texture_Map` → `_MainTex`; outline 0.15. `usePotaToon=true`. All hulls cel-shade correctly.
 - **B5 — Space Combat Kit: DO NOT import wholesale.** Package bundles a full `ProjectSettings/` overwrite
   (Graphics/Quality/Input/Tags/Physics/ProjectSettings) + `Packages/manifest.json` → would clobber our URP +
   new-Input-System config. Harvest VFX via a scratch project instead; never let it touch ProjectSettings/manifest.

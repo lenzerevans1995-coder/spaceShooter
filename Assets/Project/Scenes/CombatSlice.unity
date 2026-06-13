@@ -119,6 +119,70 @@ NavMeshSettings:
     debug:
       m_Flags: 0
   m_NavMeshData: {fileID: 0}
+--- !u!1 &40930831
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 40930833}
+  - component: {fileID: 40930832}
+  m_Layer: 0
+  m_Name: CombatBootstrap
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &40930832
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 40930831}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: db7c1157d6342bd4b83d184d1eefc105, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::SpaceShooter.Flow.CombatBootstrap
+  playerHull: {fileID: 1122383940670264, guid: 5a5b2eb9e68371249b97b6bbb0baf92c, type: 3}
+  smallEnemyHullA: {fileID: 1721860369327728, guid: 7bdd1493f99bcf34887e6fba71ed5087, type: 3}
+  smallEnemyHullB: {fileID: 1117105109605406, guid: f2ab705afca40e14fa0e1b3159bb89ae, type: 3}
+  largeEnemyHullA: {fileID: 1029753612667854, guid: 72ac25b4d4a16be41a41871f9de3fc2e, type: 3}
+  largeEnemyHullB: {fileID: 1451094774095538, guid: 2d140dec29f3f0241b5a8b5e6273d8a1, type: 3}
+  fieldRadius: 45
+  groundY: -1.8
+  smallEnemyCount: 4
+  largeEnemyCount: 2
+  playerScale: 0.42
+  smallScale: 0.42
+  largeScale: 0.72
+  playerYaw: 0
+  enemyYaw: 0
+  usePotaToon: 1
+  potaToonReference: {fileID: 2100000, guid: b4429288d03c7ee489e311531ec6af24, type: 2}
+  potaToonOutline: 0.15
+  showHitboxRing: 0
+  factionTint: 0.5
+  autoDemo: 1
+--- !u!4 &40930833
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 40930831}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &830922388
 GameObject:
   m_ObjectHideFlags: 0
@@ -194,69 +258,6 @@ Transform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 830922388}
-  serializedVersion: 2
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1 &1119298921
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 1119298923}
-  - component: {fileID: 1119298922}
-  m_Layer: 0
-  m_Name: CombatBootstrap
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!114 &1119298922
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1119298921}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: db7c1157d6342bd4b83d184d1eefc105, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::SpaceShooter.Flow.CombatBootstrap
-  playerHull: {fileID: 1122383940670264, guid: 5a5b2eb9e68371249b97b6bbb0baf92c, type: 3}
-  smallEnemyHullA: {fileID: 1721860369327728, guid: 7bdd1493f99bcf34887e6fba71ed5087, type: 3}
-  smallEnemyHullB: {fileID: 1117105109605406, guid: f2ab705afca40e14fa0e1b3159bb89ae, type: 3}
-  largeEnemyHullA: {fileID: 1029753612667854, guid: 72ac25b4d4a16be41a41871f9de3fc2e, type: 3}
-  largeEnemyHullB: {fileID: 1451094774095538, guid: 2d140dec29f3f0241b5a8b5e6273d8a1, type: 3}
-  fieldRadius: 45
-  groundY: -1.8
-  smallEnemyCount: 4
-  largeEnemyCount: 2
-  playerScale: 0.42
-  smallScale: 0.42
-  largeScale: 0.72
-  playerYaw: 0
-  enemyYaw: 0
-  usePotaToon: 0
-  potaToonOutline: 0.15
-  showHitboxRing: 0
-  factionTint: 0.5
-  autoDemo: 1
---- !u!4 &1119298923
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1119298921}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
@@ -398,4 +399,4 @@ SceneRoots:
   m_Roots:
   - {fileID: 830922390}
   - {fileID: 1342534095}
-  - {fileID: 1119298923}
+  - {fileID: 40930833}

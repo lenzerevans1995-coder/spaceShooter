@@ -44,7 +44,8 @@ namespace SpaceShooter.Flow
         public float enemyYaw = 0f;
 
         [Header("Styling")]
-        public bool usePotaToon = false;          // PotaToon needs its Renderer Feature; off until that pass
+        public bool usePotaToon = false;          // requires PotaToonFeature on the active renderer
+        public Material potaToonReference;         // a real PotaToon/Toon material to clone (keywords matter!)
         public float potaToonOutline = 0.15f;
         public bool showHitboxRing = false;        // debug-only faction/hitbox disc under ships
         [Range(0f, 1f)] public float factionTint = 0.5f;
@@ -207,8 +208,15 @@ namespace SpaceShooter.Flow
         /// </summary>
         void ApplyPotaToon(GameObject model, float outlineWidth)
         {
-            var toon = Shader.Find("PotaToon/Toon");
-            if (toon == null) { Debug.LogWarning("[CombatBootstrap] PotaToon/Toon shader not found."); return; }
+            // Clone a REAL PotaToon material so the shader keywords (_USEMIDTONE_ON, _RECEIVELIGHTSHADOW_ON,
+            // etc.) come across — a bare new Material(PotaToon/Toon) renders black/flat without them.
+            Material baseMat = potaToonReference;
+            if (baseMat == null)
+            {
+                var toon = Shader.Find("PotaToon/Toon");
+                if (toon == null) { Debug.LogWarning("[CombatBootstrap] PotaToon/Toon shader not found."); return; }
+                baseMat = new Material(toon);
+            }
 
             foreach (var r in model.GetComponentsInChildren<Renderer>())
             {
@@ -217,19 +225,18 @@ namespace SpaceShooter.Flow
                 for (int i = 0; i < src.Length; i++)
                 {
                     var s = src[i];
-                    var pm = new Material(toon);
+                    var pm = new Material(baseMat); // inherits keywords + tuned props from the reference
                     if (s != null)
                     {
                         Texture albedo = s.HasProperty("_Albedo_Map") ? s.GetTexture("_Albedo_Map")
+                                       : s.HasProperty("_Texture_Map") ? s.GetTexture("_Texture_Map")  // POLYGON_SpaceShip_Rim (Cruiser)
                                        : s.HasProperty("_BaseMap") ? s.GetTexture("_BaseMap")
                                        : s.HasProperty("_MainTex") ? s.GetTexture("_MainTex") : null;
                         if (albedo != null) pm.SetTexture("_MainTex", albedo);
-                        if (s.HasProperty("_Emission_Color")) pm.SetColor("_EmissionColor", s.GetColor("_Emission_Color"));
                     }
+                    pm.SetColor("_BaseColor", Color.white);
                     pm.SetFloat("_OutlineWidth", outlineWidth);
                     pm.SetColor("_OutlineColor", new Color(0.02f, 0.02f, 0.04f, 1f));
-                    pm.SetFloat("_BaseStep", 0.5f);
-                    pm.SetFloat("_StepSmoothness", 0.03f);
                     dst[i] = pm;
                 }
                 r.sharedMaterials = dst;
