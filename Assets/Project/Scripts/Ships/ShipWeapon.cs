@@ -16,6 +16,7 @@ namespace SpaceShooter.Ships
         [SerializeField] Faction _faction = Faction.Player;
         [SerializeField] float _fireInterval = 0.12f;
 
+        Transform[] _firePoints;   // optional muzzles from ShipHardpoints; null = fire from ship center
         float _timer;
         int _shot;
 
@@ -23,6 +24,9 @@ namespace SpaceShooter.Ships
         {
             _pattern = pattern; _faction = faction; _fireInterval = fireInterval;
         }
+
+        /// <summary>Assign muzzles so shots originate from the hull's authored fire points.</summary>
+        public void SetFirePoints(Transform[] firePoints) => _firePoints = firePoints;
 
         /// <summary>Call each frame. Fires on cadence while <paramref name="firing"/> is held.</summary>
         public void Tick(Vector3 origin, Vector3 aimDir, bool firing, float dt)
@@ -47,8 +51,25 @@ namespace SpaceShooter.Ships
 
         void Fire(Vector3 origin, Vector3 aimDir)
         {
+            if (_firePoints != null && _firePoints.Length > 0)
+            {
+                // One volley per muzzle, spawned at the muzzle, aimed by the ship.
+                for (int i = 0; i < _firePoints.Length; i++)
+                {
+                    var fp = _firePoints[i];
+                    if (fp != null) Emit(fp.position, aimDir);
+                }
+            }
+            else
+            {
+                Emit(origin, aimDir);
+            }
+        }
+
+        void Emit(Vector3 pos, Vector3 aimDir)
+        {
             var ctx = new AttackContext(BulletManager.Instance, BeamManager.Instance,
-                                        origin, aimDir, _faction, _shot++);
+                                        pos, aimDir, _faction, _shot++);
             _pattern.Emit(in ctx);
         }
     }

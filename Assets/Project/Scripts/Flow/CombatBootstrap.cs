@@ -144,6 +144,10 @@ namespace SpaceShooter.Flow
             var weapon = go.AddComponent<ShipWeapon>();
             weapon.Configure(BuildPlayerPattern(), Faction.Player, 0.14f);
 
+            // If the hull authored muzzles (ShipHardpoints tool), fire from them.
+            var hp = go.GetComponentInChildren<ShipHardpoints>();
+            if (hp != null && hp.FireCount > 0) weapon.SetFirePoints(hp.firePoints.ToArray());
+
             var input = go.AddComponent<ShipInput>();
             ship.Setup(input, weapon, _field);
             return ship;
