@@ -50,10 +50,14 @@ namespace SpaceShooter.Flow
         public bool showHitboxRing = false;        // debug-only faction/hitbox disc under ships
         [Range(0f, 1f)] public float factionTint = 0.5f;
 
-        [Header("Projectile VFX (Master Stylized Projectile prefabs; null = glowing sphere)")]
+        [Header("Projectile VFX (Unique Projectiles prefabs; null = glowing sphere)")]
         public GameObject playerProjectile;
         public GameObject enemyProjectile;
         public float projectileScale = 1f;
+
+        [Header("Thruster VFX (Polygon Arsenal jet; spawned at ShipHardpoints thruster points)")]
+        public GameObject thrusterVFX;
+        public float thrusterScale = 1f;
 
         [Header("Testing")]
         public bool autoDemo = true;
@@ -200,6 +204,8 @@ namespace SpaceShooter.Flow
             if (usePotaToon) ApplyPotaToon(model, potaToonOutline);
             else ApplyFactionTint(model, tint);
 
+            SpawnThrusters(model);
+
             float radius = MeasureRadius(model, parent.position);
 
             // Optional debug disc visualizing the measured hitbox (off by default).
@@ -278,6 +284,21 @@ namespace SpaceShooter.Flow
                     if (m.HasProperty("_BaseColor")) m.SetColor("_BaseColor", c);
                     else if (m.HasProperty("_Color")) m.SetColor("_Color", c);
                 }
+            }
+        }
+
+        /// <summary>Attach the thruster VFX at each authored thruster point (ShipHardpoints).</summary>
+        void SpawnThrusters(GameObject model)
+        {
+            if (thrusterVFX == null) return;
+            var hp = model.GetComponentInChildren<ShipHardpoints>();
+            if (hp == null) return;
+            foreach (var tp in hp.ValidThrusterPoints())
+            {
+                var fx = Instantiate(thrusterVFX, tp);
+                fx.transform.localPosition = Vector3.zero;
+                fx.transform.localRotation = Quaternion.identity;
+                fx.transform.localScale = Vector3.one * thrusterScale;
             }
         }
 

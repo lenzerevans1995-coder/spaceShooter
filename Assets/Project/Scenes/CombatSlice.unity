@@ -298,6 +298,8 @@ MonoBehaviour:
   playerProjectile: {fileID: 132410131150665497, guid: 932b95bdb7e66f74eaa86d179524a1a1, type: 3}
   enemyProjectile: {fileID: 1961964258596952, guid: eca1ff6741def5a468081e17839fc91e, type: 3}
   projectileScale: 2.5
+  thrusterVFX: {fileID: 6286345892844241114, guid: 1300c0a3cbedce2418af45b95ad08a02, type: 3}
+  thrusterScale: 1
   autoDemo: 1
 --- !u!4 &908034990
 Transform:
