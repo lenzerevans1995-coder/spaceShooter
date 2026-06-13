@@ -63,6 +63,8 @@ namespace SpaceShooter.Flow
             if (BulletManager.Instance == null) new GameObject("BulletManager").AddComponent<BulletManager>();
             if (BeamManager.Instance == null) new GameObject("BeamManager").AddComponent<BeamManager>();
 
+            BuildPostProcessing(); // global bloom so emissive bullets glow
+
             _playerBullet = BuildBullet("PlayerBullet", new Color(0.35f, 0.95f, 1f));
             _enemyBullet = BuildBullet("EnemyBullet", new Color(1f, 0.45f, 0.55f));
             BulletManager.Instance.PrewarmType(_playerBullet, 800);
@@ -81,6 +83,10 @@ namespace SpaceShooter.Flow
             cam.farClipPlane = 600f;
             cam.clearFlags = CameraClearFlags.SolidColor;
             cam.backgroundColor = new Color(0.02f, 0.02f, 0.05f);
+            cam.allowHDR = true;
+            var camData = cam.GetComponent<UnityEngine.Rendering.Universal.UniversalAdditionalCameraData>();
+            if (camData == null) camData = cam.gameObject.AddComponent<UnityEngine.Rendering.Universal.UniversalAdditionalCameraData>();
+            camData.renderPostProcessing = true;
             var rig = cam.GetComponent<CameraRig>(); if (rig == null) rig = cam.gameObject.AddComponent<CameraRig>();
             rig.SetTarget(_player.transform);
 
@@ -284,10 +290,23 @@ namespace SpaceShooter.Flow
             go.transform.localScale = Vector3.one * 0.7f;
             var mr = go.GetComponent<MeshRenderer>();
             var sh = Shader.Find("Universal Render Pipeline/Unlit"); if (sh == null) sh = Shader.Find("Unlit/Color");
-            if (sh != null) mr.sharedMaterial = new Material(sh) { color = color };
+            if (sh != null) mr.sharedMaterial = new Material(sh) { color = color * 3.5f }; // HDR so Bloom makes it glow
             go.AddComponent<Bullet>();
             go.SetActive(false);
             return go;
+        }
+
+        void BuildPostProcessing()
+        {
+            var go = new GameObject("GlobalVolume");
+            var vol = go.AddComponent<UnityEngine.Rendering.Volume>();
+            vol.isGlobal = true;
+            var profile = ScriptableObject.CreateInstance<UnityEngine.Rendering.VolumeProfile>();
+            vol.sharedProfile = profile;
+            var bloom = profile.Add<UnityEngine.Rendering.Universal.Bloom>(true);
+            bloom.intensity.Override(0.9f);
+            bloom.threshold.Override(1.0f);
+            bloom.scatter.Override(0.6f);
         }
 
         void BuildGroundDisc(Vector3 center, float radius)

@@ -104,8 +104,9 @@
 | 1 | Architecture & GDD | APPROVED |
 | 2 | Core loop + object pooler (foundation code) | **COMPLETE — awaiting review** |
 | 3 | Bullet-hell pattern engine | **COMPLETE — awaiting review** |
-| 4 | Player ship + combat loop (vertical slice) | **COMPLETE — awaiting review** |
-| 5 | Skill tree integration | not started |
+| 4 | Player ship + combat loop (vertical slice) | COMPLETE (+ PotaToon cel-shading, bloom/glow projectiles) |
+| 4b | Styling: PotaToon + Bloom + SCK art harvest | COMPLETE |
+| 5 | Skill tree integration | next up |
 | 6 | UI/HUD wiring | not started |
 | 7 | Planets/rounds/boss content | not started |
 | 8 | VFX/polish/audio | not started |
@@ -138,6 +139,16 @@ All under `Assets/Project/Scripts/` (namespace `SpaceShooter.*`):
 - Scene `Scenes/CombatSlice.unity`. Hulls: player Fighter_01; small Fighter_03/Stealth_01; large Bomber_01/Cruiser_01.
 - DESIGN: free-roam circular arena (field > screen), twin-stick, landscape, mobile-first. Hitbox = inscribed circle of hull mesh.
 
+## 5d. NEXT STEPS (for review / next session)
+- **Phase 5 — Skill tree:** PlayerStats backbone → wire SimpleTalentTreeUi (award points on round clear,
+  StatModifierService maps talents→stats). In progress this session.
+- **VFX upgrade (documented):** swap glowing-sphere bullets for SCK `Projectile_Energy.png` energy-bolt
+  billboards + `MuzzleFlash.png`; see `SpaceCombatKit_Assets.md` for exact paths + integration order.
+- **Mobile UI:** swap VirtualJoystick squares for SCK `TouchJoystickBackground/Mobile.png` + add buttons.
+- **Phase 6 UI/HUD:** ModularGameUIKit + SCK HUD sprites (target boxes, health/shield bars, radar icons).
+- To play it yourself: open `Assets/Project/Scenes/CombatSlice.unity`, set `CombatBootstrap.autoDemo = false`,
+  press Play (WASD move + mouse aim on desktop).
+
 ## 6. CHANGELOG
 - 2026-06-12 — Phase 1 drafted; environment + asset ledger verified via project scan.
 - 2026-06-12 — Phase 1 APPROVED. PotaToon located + imported (clean). Phase 2 foundation written
@@ -146,6 +157,10 @@ All under `Assets/Project/Scripts/` (namespace `SpaceShooter.*`):
   behaviors + telegraph/sweep beam subsystem + shared TargetRegistry + EmitterController timeline.
   Verified in PatternShowcase: spiral & scatter & beam render correctly, collision applies damage
   (target 100000→99963 HP), 200+ bullets @ 268 FPS. Compiles clean. Screenshots in Assets/Screenshots.
+- 2026-06-13 — Autonomous session: git repo (code-only) created + pushed (lenzerevans1995-coder/spaceShooter);
+  PotaToon cel-shading working on all hulls (Renderer Feature + material-clone fix); SCK harvested art-only
+  (~400MB, scripts stripped after they broke execute_code — see decision log + SpaceCombatKit_Assets.md);
+  added Bloom volume + emissive HDR projectiles (glowing energy bolts). All committed.
 - 2026-06-12 — Phase 3 APPROVED (twin-stick, landscape, follow cam). Phase 4 vertical slice built:
   free-roam circular arena, player ship (twin-stick + autoDemo), follow cam, mixed small/large enemy
   wave w/ AI + emitter patterns, round win/lose. Verified end-to-end: round WON 0/6, player survived
