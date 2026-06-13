@@ -149,6 +149,17 @@ All under `Assets/Project/Scripts/` (namespace `SpaceShooter.*`):
 - To play it yourself: open `Assets/Project/Scenes/CombatSlice.unity`, set `CombatBootstrap.autoDemo = false`,
   press Play (WASD move + mouse aim on desktop).
 
+## 5e. VFX / TOOLS (current)
+- **Projectiles:** Unique Projectiles Vol1+Vol3 (URP) + VFX Graph Ultra Mega Pack (URP, needs VFX Graph pkg — added).
+  All under gitignored `Assets/GabrielAguiarProductions`. Fixed a 2-volume shader collision (restored `Additive_Unlit`)
+  → all 91 projectiles clean. Bullets: player `vfx_Projectile_BulletSkill01_Blue`, enemy `vfx_Projectile_Fireball01Orange`.
+- **Polygon Arsenal** (Archanor, URP via its 6000.0.23 URP sub-package) under gitignored `Assets/Polygon Arsenal`:
+  thrusters (Jet01Blue/Jet03Red), trails, auras/buffs/powerups (skill VFX), 1597 prefabs.
+- **Hardpoints tool:** `Ships/ShipHardpoints.cs` + `Editor/ShipHardpointsEditor.cs` (Scene-view add/mirror/position
+  fire & thruster points). `ShipWeapon` fires from fire points; `CombatBootstrap.SpawnThrusters` attaches thrusterVFX
+  at thruster points. Author hardpoints on a ship instance / prefab variant (Synty hulls are read-only model prefabs).
+- NOTE: all VFX asset packs are gitignored; the repo stays code-only.
+
 ## 6. CHANGELOG
 - 2026-06-12 — Phase 1 drafted; environment + asset ledger verified via project scan.
 - 2026-06-12 — Phase 1 APPROVED. PotaToon located + imported (clean). Phase 2 foundation written
