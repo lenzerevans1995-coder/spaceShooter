@@ -78,9 +78,22 @@
   Working approach: `CombatBootstrap.ApplyPotaToon` CLONES a real PotaToon material (`potaToonReference` = body.mat)
   so shader keywords carry over (a bare `new Material(PotaToon/Toon)` renders black). Albedo transferred from Synty
   `_Albedo_Map`/`_Texture_Map` → `_MainTex`; outline 0.15. `usePotaToon=true`. All hulls cel-shade correctly.
-- **B5 — Space Combat Kit: DO NOT import wholesale.** Package bundles a full `ProjectSettings/` overwrite
-  (Graphics/Quality/Input/Tags/Physics/ProjectSettings) + `Packages/manifest.json` → would clobber our URP +
-  new-Input-System config. Harvest VFX via a scratch project instead; never let it touch ProjectSettings/manifest.
+- ~~B5 — Space Combat Kit~~ RESOLVED (art-only harvest). DECISION LOG below.
+
+### Space Combat Kit — what we did and why (2026-06-13)
+- Reconstructed the kit's `Assets/` from the .unitypackage into `Assets/AssetPacks/SpaceCombatKit` (GUID-preserving,
+  **never** touched ProjectSettings/manifest — those 24 entries were skipped).
+- The FULL kit is a 34-assembly competing framework (Vehicles/Weapons/AI/Radar/HUD/Loadouts/Cameras/Health/Teams…).
+  It compiled (after deleting one PPv2-dependent script, `GameStatePostProcessEnabler.cs`) BUT the 34 extra editor
+  assemblies overflowed the Windows command-line limit for UnityMCP's `execute_code` (CodeDom) backend, and
+  `manage_camera` screenshots also returned blank — i.e. it broke our primary verification toolchain.
+- **Resolution:** stripped all SCK `.cs`/`.asmdef` (1068 files) → assemblies gone, `execute_code` + screenshots
+  restored. KEPT all **2143 art files (~400 MB)**: models (FBX), materials, textures, VFX/laser particle prefabs,
+  UI/HUD/targeting sprites. Prefabs now have harmless missing-script components (warnings, not errors).
+- **Net:** we have SCK's ART to dress up OUR systems (bullets→laser VFX, HUD sprites, ship models). We did NOT
+  adopt SCK's framework scripts (they conflict with our architecture and broke tooling). If the user wants SCK's
+  functional systems later, that belongs in a separate project, not this one.
+- SCK art is under `Assets/AssetPacks/` which is **gitignored** (not in the repo).
 
 ---
 
