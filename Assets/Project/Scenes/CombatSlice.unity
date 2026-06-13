@@ -287,7 +287,7 @@ MonoBehaviour:
   largeEnemyCount: 2
   playerScale: 0.42
   smallScale: 0.42
-  largeScale: 0.72
+  largeScale: 0.38
   playerYaw: 0
   enemyYaw: 0
   usePotaToon: 1
@@ -295,9 +295,9 @@ MonoBehaviour:
   potaToonOutline: 0.15
   showHitboxRing: 0
   factionTint: 0.5
-  playerProjectile: {fileID: 1657981230171060, guid: 080168af0fb1a0f48bd653b0def3737e, type: 3}
-  enemyProjectile: {fileID: 1657981230171060, guid: 6cf36a334a0e5754ea36fca06014b86a, type: 3}
-  projectileScale: 3
+  playerProjectile: {fileID: 132410131150665497, guid: 932b95bdb7e66f74eaa86d179524a1a1, type: 3}
+  enemyProjectile: {fileID: 1961964258596952, guid: eca1ff6741def5a468081e17839fc91e, type: 3}
+  projectileScale: 2.5
   autoDemo: 1
 --- !u!4 &908034990
 Transform:
