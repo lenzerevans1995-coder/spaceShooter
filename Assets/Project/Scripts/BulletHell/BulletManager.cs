@@ -19,6 +19,18 @@ namespace SpaceShooter.BulletHell
         [SerializeField] Vector2 _fieldHalfExtents = new Vector2(40f, 24f);
         [SerializeField] float _cullPadding = 3f;
 
+        // When set (> 0) the cull region is a disc of this radius around _fieldCenter, matching
+        // the circular arena, instead of the rectangle above. Configured from the field radius so
+        // bullets fired outward from the arena edge still fly visibly past it before they die.
+        [SerializeField] float _cullRadius = 0f;
+
+        /// <summary>Switch culling to a disc matching the round's circular arena (+ padding).</summary>
+        public void SetCullCircle(Vector2 center, float radius)
+        {
+            _fieldCenter = center;
+            _cullRadius = Mathf.Max(0f, radius);
+        }
+
         [Header("Pooling")]
         [SerializeField] int _initialCapacity = 2048;
 
@@ -57,10 +69,12 @@ namespace SpaceShooter.BulletHell
         void Update()
         {
             float dt = Time.deltaTime;
+            bool circular = _cullRadius > 0f;
             float minX = _fieldCenter.x - _fieldHalfExtents.x - _cullPadding;
             float maxX = _fieldCenter.x + _fieldHalfExtents.x + _cullPadding;
             float minZ = _fieldCenter.y - _fieldHalfExtents.y - _cullPadding;
             float maxZ = _fieldCenter.y + _fieldHalfExtents.y + _cullPadding;
+            float cullSqr = _cullRadius * _cullRadius;
 
             var targets = TargetRegistry.Targets;
 
@@ -72,7 +86,18 @@ namespace SpaceShooter.BulletHell
                 if (alive)
                 {
                     Vector3 p = b.Position;
-                    if (p.x < minX || p.x > maxX || p.z < minZ || p.z > maxZ)
+                    bool outOfBounds;
+                    if (circular)
+                    {
+                        float dx = p.x - _fieldCenter.x, dz = p.z - _fieldCenter.y;
+                        outOfBounds = dx * dx + dz * dz > cullSqr;
+                    }
+                    else
+                    {
+                        outOfBounds = p.x < minX || p.x > maxX || p.z < minZ || p.z > maxZ;
+                    }
+
+                    if (outOfBounds)
                         alive = false;
                     else if (CheckCollision(b, targets))
                         alive = false;

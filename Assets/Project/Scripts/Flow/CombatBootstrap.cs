@@ -85,6 +85,9 @@ namespace SpaceShooter.Flow
             _field = new GameObject("CombatField").AddComponent<CombatField>();
             _field.SetRadius(fieldRadius);
             BuildGroundDisc(_field.Center, fieldRadius);
+            // Cull bullets on a disc matching the arena (+ margin) so shots fired outward from the
+            // field edge still travel visibly past it before dying — no more "dead zone" at edges.
+            BulletManager.Instance.SetCullCircle(new Vector2(_field.Center.x, _field.Center.z), fieldRadius + 14f);
 
             _player = BuildPlayer();
 
@@ -338,6 +341,9 @@ namespace SpaceShooter.Flow
                 foreach (var lr in go.GetComponentsInChildren<LineRenderer>(true)) DestroyImmediate(lr);
                 // Local sim so trail particles stay with the bullet (no world-space "line" streaks).
                 foreach (var ps in go.GetComponentsInChildren<ParticleSystem>(true)) { var m = ps.main; m.simulationSpace = ParticleSystemSimulationSpace.Local; }
+                // Camera-facing (View) alignment so the bullet is always fully visible top-down —
+                // otherwise the mesh aligns to travel and goes edge-on (invisible) at some angles.
+                foreach (var r in go.GetComponentsInChildren<ParticleSystemRenderer>(true)) r.alignment = ParticleSystemRenderSpace.View;
             }
             else
             {

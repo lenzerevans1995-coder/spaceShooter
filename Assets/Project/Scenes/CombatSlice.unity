@@ -300,7 +300,7 @@ MonoBehaviour:
   projectileScale: 3
   thrusterVFX: {fileID: 6286345892844241114, guid: 1300c0a3cbedce2418af45b95ad08a02, type: 3}
   thrusterScale: 4
-  autoDemo: 1
+  autoDemo: 0
 --- !u!4 &908034990
 Transform:
   m_ObjectHideFlags: 0
