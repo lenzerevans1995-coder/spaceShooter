@@ -1,0 +1,52 @@
+# =============================================================
+#  Code-only repository.
+#  We version OUR scripts + project config only — NOT the
+#  imported asset packs (Synty, PotaToon, ModularGameUIKit,
+#  FlatKit, TextMesh Pro, etc.), which are large and re-importable.
+# =============================================================
+
+# --- Unity generated ---
+[Ll]ibrary/
+[Tt]emp/
+[Oo]bj/
+[Bb]uild/
+[Bb]uilds/
+[Ll]ogs/
+[Uu]ser[Ss]ettings/
+[Mm]emoryCaptures/
+[Rr]ecordings/
+
+# --- Exclude ALL of Assets except our own authored content ---
+/[Aa]ssets/*
+!/[Aa]ssets/Project/
+!/[Aa]ssets/Project.meta
+/[Aa]ssets/Project/*
+!/[Aa]ssets/Project/Scripts/
+!/[Aa]ssets/Project/Scripts.meta
+!/[Aa]ssets/Project/Scenes/
+!/[Aa]ssets/Project/Scenes.meta
+!/[Aa]ssets/Project/Settings/
+!/[Aa]ssets/Project/Settings.meta
+
+# --- IDE / build artifacts ---
+.vs/
+.idea/
+*.csproj
+*.unityproj
+*.sln
+*.suo
+*.user
+*.userprefs
+*.booproj
+*.svd
+*.tmp
+*.apk
+*.aab
+*.app
+*.unitypackage
+
+# --- OS ---
+.DS_Store
+Thumbs.db
+sysinfo.txt
+crashlytics-build.properties
