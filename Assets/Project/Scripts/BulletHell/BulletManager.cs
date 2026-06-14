@@ -31,6 +31,16 @@ namespace SpaceShooter.BulletHell
             _cullRadius = Mathf.Max(0f, radius);
         }
 
+        /// <summary>Cull on a rectangle matching the portrait field. `halfExtents` should already
+        /// include any margin you want bullets to fly past the walls before dying.</summary>
+        public void SetCullBox(Vector2 center, Vector2 halfExtents)
+        {
+            _fieldCenter = center;
+            _fieldHalfExtents = halfExtents;
+            _cullPadding = 0f;
+            _cullRadius = 0f;   // 0 => rectangular cull path
+        }
+
         [Header("Pooling")]
         [SerializeField] int _initialCapacity = 2048;
 

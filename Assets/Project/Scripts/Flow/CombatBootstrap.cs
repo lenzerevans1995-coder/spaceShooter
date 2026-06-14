@@ -28,9 +28,10 @@ namespace SpaceShooter.Flow
         public GameObject largeEnemyHullA;
         public GameObject largeEnemyHullB;
 
-        [Header("Field")]
-        public float fieldRadius = 45f;
+        [Header("Field (portrait: half-width X, half-height Z)")]
+        public Vector2 fieldExtents = new Vector2(13f, 26f);
         public float groundY = -1.8f;
+        public float bulletCullMargin = 8f;   // bullets fly this far past the walls before dying
 
         [Header("Wave")]
         public int smallEnemyCount = 4;
@@ -83,11 +84,13 @@ namespace SpaceShooter.Flow
             BulletManager.Instance.PrewarmType(_enemyBullet, pwE);
 
             _field = new GameObject("CombatField").AddComponent<CombatField>();
-            _field.SetRadius(fieldRadius);
-            BuildGroundDisc(_field.Center, fieldRadius);
-            // Cull bullets on a disc matching the arena (+ margin) so shots fired outward from the
-            // field edge still travel visibly past it before dying — no more "dead zone" at edges.
-            BulletManager.Instance.SetCullCircle(new Vector2(_field.Center.x, _field.Center.z), fieldRadius + 14f);
+            _field.SetExtents(fieldExtents);
+            BuildGroundRect(_field.Center, fieldExtents);
+            // Cull bullets on a rectangle matching the portrait field (+ margin) so shots fired
+            // outward from any edge travel visibly past the wall before dying — no edge dead-zone.
+            BulletManager.Instance.SetCullBox(
+                new Vector2(_field.Center.x, _field.Center.z),
+                fieldExtents + Vector2.one * bulletCullMargin);
 
             _player = BuildPlayer();
 
@@ -103,7 +106,8 @@ namespace SpaceShooter.Flow
             if (camData == null) camData = cam.gameObject.AddComponent<UnityEngine.Rendering.Universal.UniversalAdditionalCameraData>();
             camData.renderPostProcessing = true;
             var rig = cam.GetComponent<CameraRig>(); if (rig == null) rig = cam.gameObject.AddComponent<CameraRig>();
-            rig.SetTarget(_player.transform);
+            // Static tilted camera framing the whole portrait field (no follow) — fixed arena.
+            rig.FrameStatic(_field.Center, fieldExtents);
 
             EnsureEventSystem();
             var canvas = BuildCanvas();
@@ -113,12 +117,13 @@ namespace SpaceShooter.Flow
             input.Setup(cam, _player.transform, moveStick, aimStick);
             input.autoDemo = autoDemo;
 
-            // Mixed wave: small + large hulls.
+            // Mixed wave: small + large hulls. Enter from the top band and pressure downward
+            // (Archero/VS feel). Full continuous drift-down wave spawning is the next gameplay pass.
             var enemies = new List<ShipActor>();
             for (int i = 0; i < smallEnemyCount; i++)
-                enemies.Add(BuildEnemy(PickSmall(i), smallScale, 60f, 0.85f, _field.RandomPoint(12f)));
+                enemies.Add(BuildEnemy(PickSmall(i), smallScale, 60f, 0.85f, _field.TopSpawnPoint(Random.Range(2f, 8f))));
             for (int i = 0; i < largeEnemyCount; i++)
-                enemies.Add(BuildEnemy(PickLarge(i), largeScale, 240f, 1.1f, _field.RandomPoint(18f)));
+                enemies.Add(BuildEnemy(PickLarge(i), largeScale, 240f, 1.1f, _field.TopSpawnPoint(Random.Range(4f, 10f))));
 
             _round = new RoundController();
             _round.Begin(_player, enemies);
@@ -374,14 +379,15 @@ namespace SpaceShooter.Flow
             bloom.scatter.Override(0.6f);
         }
 
-        void BuildGroundDisc(Vector3 center, float radius)
+        void BuildGroundRect(Vector3 center, Vector2 extents)
         {
-            var disc = GameObject.CreatePrimitive(PrimitiveType.Cylinder);
-            var col = disc.GetComponent<Collider>(); if (col != null) Destroy(col);
-            disc.name = "FieldGround";
-            disc.transform.position = center + new Vector3(0f, groundY, 0f);
-            disc.transform.localScale = new Vector3(radius * 2f, 0.1f, radius * 2f);
-            var mr = disc.GetComponent<MeshRenderer>();
+            var ground = GameObject.CreatePrimitive(PrimitiveType.Plane);  // 10x10 units at scale 1
+            var col = ground.GetComponent<Collider>(); if (col != null) Destroy(col);
+            ground.name = "FieldGround";
+            ground.transform.position = center + new Vector3(0f, groundY, 0f);
+            // Plane is 10 units across at scale 1; size it to the field (+ a small bleed past walls).
+            ground.transform.localScale = new Vector3((extents.x + 2f) * 2f / 10f, 1f, (extents.y + 2f) * 2f / 10f);
+            var mr = ground.GetComponent<MeshRenderer>();
             var sh = Shader.Find("Universal Render Pipeline/Lit"); if (sh == null) sh = Shader.Find("Standard");
             if (sh != null) mr.sharedMaterial = new Material(sh) { color = new Color(0.06f, 0.07f, 0.12f) };
         }

@@ -281,8 +281,9 @@ MonoBehaviour:
   smallEnemyHullB: {fileID: 1117105109605406, guid: f2ab705afca40e14fa0e1b3159bb89ae, type: 3}
   largeEnemyHullA: {fileID: 1029753612667854, guid: 72ac25b4d4a16be41a41871f9de3fc2e, type: 3}
   largeEnemyHullB: {fileID: 1451094774095538, guid: 2d140dec29f3f0241b5a8b5e6273d8a1, type: 3}
-  fieldRadius: 45
+  fieldExtents: {x: 13, y: 26}
   groundY: -1.8
+  bulletCullMargin: 8
   smallEnemyCount: 4
   largeEnemyCount: 2
   playerScale: 0.42
