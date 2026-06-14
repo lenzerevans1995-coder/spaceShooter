@@ -170,21 +170,24 @@ namespace SpaceShooter.Flow
             var go = new GameObject("Player");
             go.transform.position = _field.Center;
             var ship = go.AddComponent<PlayerShip>();
-            // Groundwork for roguelike upgrades; ship/weapon will read its stats in the next pass.
-            go.AddComponent<SpaceShooter.Progression.PlayerStatsManager>();
+            var statsMgr = go.AddComponent<SpaceShooter.Progression.PlayerStatsManager>();
             float radius = AddHull(go.transform, playerHull, playerYaw, playerScale * shipScaleMultiplier, new Color(0.35f, 0.95f, 1f));
-            // Grazing: the hit radius is a FRACTION of the visual mesh, so near-misses don't kill.
-            ship.Configure(Faction.Player, 60f, radius * playerHitboxFraction);
+            ship.Configure(Faction.Player, 60f, radius);   // stats below override hp/hitbox/weapon
 
             var weapon = go.AddComponent<ShipWeapon>();
-            weapon.Configure(BuildPlayerPattern(), Faction.Player, 0.14f);
-
             // If the hull authored muzzles (ShipHardpoints tool), fire from them.
             var hp = go.GetComponentInChildren<ShipHardpoints>();
             if (hp != null && hp.FireCount > 0) weapon.SetFirePoints(hp.firePoints.ToArray());
 
             var input = go.AddComponent<ShipInput>();
             ship.Setup(input, weapon, _field);
+
+            // Drive ALL combat stats from the skill-tree manager so unlocks apply instantly.
+            // Grazing: the hitbox is the measured visual radius × the stats' hitboxFraction.
+            var baseStats = SpaceShooter.Progression.BaseStats.Default;
+            baseStats.hitboxFraction = playerHitboxFraction;
+            statsMgr.SetBase(baseStats);
+            ship.BindStats(statsMgr, _playerBullet, radius);
             return ship;
         }
 
@@ -201,15 +204,6 @@ namespace SpaceShooter.Flow
             var emitter = go.AddComponent<EmitterController>();
             emitter.Configure(BuildEnemyPattern(), Faction.Enemy, fireInterval, _player.transform);
             return ship;
-        }
-
-        AttackPatternSO BuildPlayerPattern()
-        {
-            // One projectile per shot — each authored fire point (cannon) fires a single bolt.
-            var a = ScriptableObject.CreateInstance<AimedShot>();
-            a.bulletPrefab = _playerBullet; a.count = 1;
-            a.speed = 34f; a.lifetime = 2.2f; a.damage = 2.5f; a.radius = 0.4f;
-            return a;
         }
 
         AttackPatternSO BuildEnemyPattern()

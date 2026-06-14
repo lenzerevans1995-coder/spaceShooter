@@ -1,13 +1,15 @@
 using UnityEngine;
 using SpaceShooter.Combat;
 using SpaceShooter.Inputs;
+using SpaceShooter.Progression;
 
 namespace SpaceShooter.Ships
 {
     /// <summary>
     /// Player-controlled ship: analog movement clamped to the field, hull faces the aim (or
     /// motion), and fires its ShipWeapon while the aim stick / fire is held. Driven entirely
-    /// by a source-agnostic ShipInput.
+    /// by a source-agnostic ShipInput. Combat stats (speed, HP, hitbox, weapon) are driven by a
+    /// PlayerStatsManager so skill-tree unlocks take effect immediately.
     /// </summary>
     public class PlayerShip : ShipActor
     {
@@ -21,9 +23,35 @@ namespace SpaceShooter.Ships
         CombatField _field;
         Vector3 _vel;
 
+        PlayerStatsManager _stats;
+        GameObject _bulletPrefab;
+        float _baseHitRadius = 1f;
+
         public void Setup(ShipInput input, ShipWeapon weapon, CombatField field)
         {
             _input = input; _weapon = weapon; _field = field;
+        }
+
+        /// <summary>
+        /// Bind to the skill-tree stats source. Applies the current stats now and re-applies on every
+        /// recalculation (unlock between waves), so upgrades are live without rebuilding the ship.
+        /// `baseHitRadius` is the measured visual radius; the hitbox is that × the stats' fraction.
+        /// </summary>
+        public void BindStats(PlayerStatsManager stats, GameObject bulletPrefab, float baseHitRadius)
+        {
+            _stats = stats; _bulletPrefab = bulletPrefab; _baseHitRadius = baseHitRadius;
+            if (_stats != null) { _stats.Changed += ApplyStats; ApplyStats(_stats.Current); }
+        }
+
+        void OnDestroy() { if (_stats != null) _stats.Changed -= ApplyStats; }
+
+        void ApplyStats(PlayerStats s)
+        {
+            _maxSpeed = s.moveSpeed;
+            SetMaxHp(s.maxHp, false);
+            SetHitRadius(_baseHitRadius * s.hitboxFraction);
+            if (_weapon != null && _bulletPrefab != null)
+                _weapon.Configure(PlayerWeaponBuilder.Build(s, _bulletPrefab), Faction.Player, s.FireInterval);
         }
 
         void Update()

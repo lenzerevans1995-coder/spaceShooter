@@ -44,6 +44,18 @@ namespace SpaceShooter.Combat
             _hp = maxHp;
         }
 
+        /// <summary>Live max-HP change (e.g. a skill node). `heal` refills; otherwise current HP
+        /// gains any positive delta so an upgrade mid-run grants the extra health immediately.</summary>
+        public void SetMaxHp(float maxHp, bool heal)
+        {
+            float delta = maxHp - _maxHp;
+            _maxHp = Mathf.Max(1f, maxHp);
+            _hp = heal ? _maxHp : Mathf.Clamp(_hp + Mathf.Max(0f, delta), 1f, _maxHp);
+        }
+
+        /// <summary>Live hit-radius change (e.g. a grazing/hitbox skill node).</summary>
+        public void SetHitRadius(float hitRadius) => _hitRadius = Mathf.Max(0.01f, hitRadius);
+
         public virtual void ApplyDamage(float amount)
         {
             if (_hp <= 0f) return;

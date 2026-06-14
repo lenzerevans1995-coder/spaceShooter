@@ -100,6 +100,20 @@ namespace SpaceShooter.Progression
         }
 
         /// <summary>
+        /// Replace the unlocked set wholesale with a given list (e.g. loaded from a save or pushed by
+        /// the skill-tree UI), then recalculate. Skips prerequisite validation — the caller owns that;
+        /// use <see cref="TryUnlock"/> for gated, one-at-a-time unlocking.
+        /// </summary>
+        public void SetUnlocked(IEnumerable<SkillNodeSO> nodes)
+        {
+            _unlocked.Clear();
+            if (nodes != null)
+                foreach (var n in nodes)
+                    if (n != null) _unlocked.Add(n);
+            Recalculate();
+        }
+
+        /// <summary>
         /// Fold all unlocked nodes onto the base. Order within a stat: flats first, then the
         /// summed percent, then any multipliers — so ordering of nodes never changes the result.
         /// </summary>
