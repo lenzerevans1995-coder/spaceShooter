@@ -112,7 +112,7 @@ namespace SpaceShooter.Flow
             // Y=0 arena fills the device screen (static tilted framing — fixed arena, no follow).
             Vector2 ext = rig.FitFieldToScreen(_field.Center, fieldExtents.y);
             _field.SetExtents(ext);
-            BuildGroundRect(_field.Center, ext);
+            BuildGroundFill(cam);   // floor covers the full screen (not just the play rectangle)
             // Cull bullets on a rectangle matching the field (+ margin) so edge shots fly past the wall.
             BulletManager.Instance.SetCullBox(
                 new Vector2(_field.Center.x, _field.Center.z), ext + Vector2.one * bulletCullMargin);
@@ -403,14 +403,37 @@ namespace SpaceShooter.Flow
             bloom.scatter.Override(0.6f);
         }
 
-        void BuildGroundRect(Vector3 center, Vector2 extents)
+        /// <summary>
+        /// Build the visual ground so it covers the WHOLE screen, not just the play rectangle. A
+        /// tilted camera projects a flat rectangle to a trapezoid (narrow at the top), which would
+        /// leave dark gaps in the top corners. We raycast the four screen corners onto the Y=groundY
+        /// plane and size the ground to span them (+ margin), so the floor fills the view at any
+        /// aspect/tilt. The play field (clamp + cull) stays the inscribed rectangle; only the visual
+        /// floor extends past it.
+        /// </summary>
+        void BuildGroundFill(Camera cam)
         {
             var ground = GameObject.CreatePrimitive(PrimitiveType.Plane);  // 10x10 units at scale 1
             var col = ground.GetComponent<Collider>(); if (col != null) Destroy(col);
             ground.name = "FieldGround";
-            ground.transform.position = center + new Vector3(0f, groundY, 0f);
-            // Plane is 10 units across at scale 1; size it to the field (+ a small bleed past walls).
-            ground.transform.localScale = new Vector3((extents.x + 2f) * 2f / 10f, 1f, (extents.y + 2f) * 2f / 10f);
+
+            var plane = new Plane(Vector3.up, new Vector3(0f, groundY, 0f));
+            float minX = 1e9f, maxX = -1e9f, minZ = 1e9f, maxZ = -1e9f;
+            var corners = new[] { new Vector2(0f, 0f), new Vector2(1f, 0f), new Vector2(0f, 1f), new Vector2(1f, 1f) };
+            foreach (var c in corners)
+            {
+                Ray r = cam.ViewportPointToRay(new Vector3(c.x, c.y, 0f));
+                if (!plane.Raycast(r, out float dist)) dist = 300f;   // ray near-parallel (toward horizon)
+                dist = Mathf.Min(dist, 300f);                          // clamp so the floor stays finite
+                Vector3 p = r.GetPoint(dist);
+                if (p.x < minX) minX = p.x; if (p.x > maxX) maxX = p.x;
+                if (p.z < minZ) minZ = p.z; if (p.z > maxZ) maxZ = p.z;
+            }
+            float mX = (maxX - minX) * 0.08f + 4f, mZ = (maxZ - minZ) * 0.08f + 4f;
+            minX -= mX; maxX += mX; minZ -= mZ; maxZ += mZ;
+
+            ground.transform.position = new Vector3((minX + maxX) * 0.5f, groundY, (minZ + maxZ) * 0.5f);
+            ground.transform.localScale = new Vector3((maxX - minX) / 10f, 1f, (maxZ - minZ) / 10f);
             var mr = ground.GetComponent<MeshRenderer>();
             var sh = Shader.Find("Universal Render Pipeline/Lit"); if (sh == null) sh = Shader.Find("Standard");
             if (sh != null) mr.sharedMaterial = new Material(sh) { color = new Color(0.06f, 0.07f, 0.12f) };
