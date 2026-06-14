@@ -28,16 +28,21 @@ namespace SpaceShooter.Flow
         public GameObject largeEnemyHullA;
         public GameObject largeEnemyHullB;
 
-        [Header("Field (portrait: half-width X, half-height Z)")]
+        [Header("Field (portrait). Z = vertical play depth; X auto-fit to screen aspect at Start.")]
         public Vector2 fieldExtents = new Vector2(13f, 26f);
         public float groundY = -1.8f;
         public float bulletCullMargin = 8f;   // bullets fly this far past the walls before dying
 
-        [Header("Wave")]
-        public int smallEnemyCount = 4;
-        public int largeEnemyCount = 2;
+        [Header("Wave treadmill")]
+        public float waveBaseInterval = 1.4f; // seconds between spawns at the start
+        public float waveMinInterval = 0.5f;  // fastest spawn cadence once ramped up
+        public float waveRampSeconds = 90f;   // base→min ramp duration
+        public int waveMaxAlive = 14;         // live-enemy population cap
+        public float enemyDriftSpeed = 6f;    // downward treadmill speed
 
         [Header("Scale (visual; hitbox is measured from mesh)")]
+        public float shipScaleMultiplier = 0.5f;   // global shrink so the arena reads bigger
+        [Range(0.1f, 1f)] public float playerHitboxFraction = 0.55f;  // grazing: hit radius < visual
         public float playerScale = 0.42f;
         public float smallScale = 0.42f;
         public float largeScale = 0.72f;
@@ -66,7 +71,9 @@ namespace SpaceShooter.Flow
         CombatField _field;
         PlayerShip _player;
         RoundController _round;
+        WaveSpawner _spawner;
         GameObject _playerBullet, _enemyBullet;
+        int _spawnIndex;
 
         void Start()
         {
@@ -84,13 +91,7 @@ namespace SpaceShooter.Flow
             BulletManager.Instance.PrewarmType(_enemyBullet, pwE);
 
             _field = new GameObject("CombatField").AddComponent<CombatField>();
-            _field.SetExtents(fieldExtents);
-            BuildGroundRect(_field.Center, fieldExtents);
-            // Cull bullets on a rectangle matching the portrait field (+ margin) so shots fired
-            // outward from any edge travel visibly past the wall before dying — no edge dead-zone.
-            BulletManager.Instance.SetCullBox(
-                new Vector2(_field.Center.x, _field.Center.z),
-                fieldExtents + Vector2.one * bulletCullMargin);
+            _field.SetExtents(fieldExtents);   // provisional; width is replaced by the aspect fit below
 
             _player = BuildPlayer();
 
@@ -106,8 +107,15 @@ namespace SpaceShooter.Flow
             if (camData == null) camData = cam.gameObject.AddComponent<UnityEngine.Rendering.Universal.UniversalAdditionalCameraData>();
             camData.renderPostProcessing = true;
             var rig = cam.GetComponent<CameraRig>(); if (rig == null) rig = cam.gameObject.AddComponent<CameraRig>();
-            // Static tilted camera framing the whole portrait field (no follow) — fixed arena.
-            rig.FrameStatic(_field.Center, fieldExtents);
+
+            // Aspect-adaptive: keep the vertical play depth, fit the camera + derive field WIDTH so the
+            // Y=0 arena fills the device screen (static tilted framing — fixed arena, no follow).
+            Vector2 ext = rig.FitFieldToScreen(_field.Center, fieldExtents.y);
+            _field.SetExtents(ext);
+            BuildGroundRect(_field.Center, ext);
+            // Cull bullets on a rectangle matching the field (+ margin) so edge shots fly past the wall.
+            BulletManager.Instance.SetCullBox(
+                new Vector2(_field.Center.x, _field.Center.z), ext + Vector2.one * bulletCullMargin);
 
             EnsureEventSystem();
             var canvas = BuildCanvas();
@@ -117,16 +125,28 @@ namespace SpaceShooter.Flow
             input.Setup(cam, _player.transform, moveStick, aimStick);
             input.autoDemo = autoDemo;
 
-            // Mixed wave: small + large hulls. Enter from the top band and pressure downward
-            // (Archero/VS feel). Full continuous drift-down wave spawning is the next gameplay pass.
-            var enemies = new List<ShipActor>();
-            for (int i = 0; i < smallEnemyCount; i++)
-                enemies.Add(BuildEnemy(PickSmall(i), smallScale, 60f, 0.85f, _field.TopSpawnPoint(Random.Range(2f, 8f))));
-            for (int i = 0; i < largeEnemyCount; i++)
-                enemies.Add(BuildEnemy(PickLarge(i), largeScale, 240f, 1.1f, _field.TopSpawnPoint(Random.Range(4f, 10f))));
+            // Wave treadmill: continuously spawn drifting enemies just above the top edge. They drift
+            // down (EnemyShip drift mode), swarm via separation, and self-despawn past the bottom.
+            _spawner = new GameObject("WaveSpawner").AddComponent<WaveSpawner>();
+            _spawner.Configure(
+                () => _field.TopSpawnPoint(-3f),   // spawn just ABOVE the top edge (negative inset)
+                SpawnDriftEnemy,
+                waveBaseInterval, waveMinInterval, waveMaxAlive, waveRampSeconds);
 
             _round = new RoundController();
-            _round.Begin(_player, enemies);
+            _round.Begin(_player, new List<ShipActor>());   // survival: no kill-all win; player death = lose
+        }
+
+        /// <summary>Factory for the wave treadmill: build a drifting enemy (mixed small/large) at pos.</summary>
+        EnemyShip SpawnDriftEnemy(Vector3 pos)
+        {
+            int i = _spawnIndex++;
+            bool large = (i % 4) == 3;   // ~1 in 4 is a heavy
+            EnemyShip e = large
+                ? BuildEnemy(PickLarge(i), largeScale, 240f, 1.1f, pos)
+                : BuildEnemy(PickSmall(i), smallScale, 60f, 0.85f, pos);
+            e.SetDrift(enemyDriftSpeed * (large ? 0.8f : 1f));
+            return e;
         }
 
         GameObject PickSmall(int i)
@@ -150,8 +170,11 @@ namespace SpaceShooter.Flow
             var go = new GameObject("Player");
             go.transform.position = _field.Center;
             var ship = go.AddComponent<PlayerShip>();
-            float radius = AddHull(go.transform, playerHull, playerYaw, playerScale, new Color(0.35f, 0.95f, 1f));
-            ship.Configure(Faction.Player, 60f, radius);
+            // Groundwork for roguelike upgrades; ship/weapon will read its stats in the next pass.
+            go.AddComponent<SpaceShooter.Progression.PlayerStatsManager>();
+            float radius = AddHull(go.transform, playerHull, playerYaw, playerScale * shipScaleMultiplier, new Color(0.35f, 0.95f, 1f));
+            // Grazing: the hit radius is a FRACTION of the visual mesh, so near-misses don't kill.
+            ship.Configure(Faction.Player, 60f, radius * playerHitboxFraction);
 
             var weapon = go.AddComponent<ShipWeapon>();
             weapon.Configure(BuildPlayerPattern(), Faction.Player, 0.14f);
@@ -170,7 +193,8 @@ namespace SpaceShooter.Flow
             var go = new GameObject("Enemy");
             go.transform.position = pos;
             var ship = go.AddComponent<EnemyShip>();
-            float radius = AddHull(go.transform, hull, enemyYaw, scale, new Color(1f, 0.4f, 0.45f));
+            go.AddComponent<EnemySeparation>();   // added before Setup so EnemyShip picks it up
+            float radius = AddHull(go.transform, hull, enemyYaw, scale * shipScaleMultiplier, new Color(1f, 0.4f, 0.45f));
             ship.Configure(Faction.Enemy, hp, radius);
             ship.Setup(_player.transform, _field);
 
@@ -456,8 +480,8 @@ namespace SpaceShooter.Flow
             float hp = _player != null ? _player.Hp : 0f;
             float maxHp = _player != null ? _player.MaxHp : 1f;
             GUI.Label(new Rect(14, 10, 500, 28), $"HP: {hp:0}/{maxHp:0}", style);
-            if (_round != null)
-                GUI.Label(new Rect(14, 40, 500, 28), $"Enemies: {_round.EnemiesAlive}/{_round.EnemiesTotal}", style);
+            if (_spawner != null)
+                GUI.Label(new Rect(14, 40, 500, 28), $"Survived: {_spawner.Elapsed:0}s   Enemies: {_spawner.AliveCount}", style);
             GUI.Label(new Rect(14, 70, 700, 28), autoDemo ? "AUTO-DEMO (set autoDemo=false to play)" : "Twin-stick: move / aim+fire", style);
 
             if (_round != null && _round.Current != RoundController.State.InProgress)

@@ -68,6 +68,58 @@ namespace SpaceShooter.CameraSystem
             transform.position = center - viewDir * d;
         }
 
+        /// <summary>
+        /// Aspect-adaptive framing. Holds the vertical play depth (`halfZ`) fixed and:
+        ///  1) fits the camera distance so the field's near & far edges fill the screen height, then
+        ///  2) derives the field's half-WIDTH so its near (bottom) edge exactly meets the screen sides
+        ///     at the current aspect — wider devices get a wider arena, none of it off-screen.
+        /// Returns the computed (halfX, halfZ) so the caller can size the field/ground/cull to match.
+        ///
+        /// CAVEAT: a flat rectangle viewed at a tilt projects to a TRAPEZOID, so it can't touch all
+        /// four screen edges at once. We anchor width to the near/bottom edge (where the player lives),
+        /// so the bottom is full-width and the far/top corners sit slightly inset — nothing is ever
+        /// clipped off-screen. This is the honest best-fit for a tilted 3D arena.
+        /// </summary>
+        public Vector2 FitFieldToScreen(Vector3 center, float halfZ)
+        {
+            _static = true;
+            _target = null;
+            Quaternion rot = Quaternion.Euler(_tilt, 0f, 0f);
+            Vector3 viewDir = rot * Vector3.forward;
+            transform.rotation = rot;
+
+            Vector3 nearEdge = center + new Vector3(0f, 0f, -halfZ);  // bottom of screen (closest)
+            Vector3 farEdge  = center + new Vector3(0f, 0f,  halfZ);  // top of screen (furthest)
+
+            // 1) Distance: driven purely by the vertical extent so the field fills screen HEIGHT.
+            float d = Mathf.Max(5f, _distance);
+            for (int it = 0; it < 12; it++)
+            {
+                transform.position = center - viewDir * d;
+                float maxY = 0.0001f;
+                Vector3 a = Cam.WorldToViewportPoint(nearEdge);
+                Vector3 b = Cam.WorldToViewportPoint(farEdge);
+                if (a.z <= 0f || b.z <= 0f) { maxY = 10f; }
+                else
+                {
+                    maxY = Mathf.Max(Mathf.Abs(a.y - 0.5f), Mathf.Abs(b.y - 0.5f)) * 2f;
+                }
+                d *= maxY / _fill;
+            }
+            _distance = d;
+            transform.position = center - viewDir * d;
+
+            // 2) Width: solve half-X so the near/bottom edge meets the screen sides for this aspect.
+            //    viewport.x is linear in world x at fixed depth, so one probe gives the slope.
+            float halfX = halfZ;
+            Vector3 c0 = Cam.WorldToViewportPoint(nearEdge);
+            Vector3 c1 = Cam.WorldToViewportPoint(nearEdge + Vector3.right);
+            float k = c1.x - c0.x;                           // viewport-x per world unit at the near edge
+            if (Mathf.Abs(k) > 1e-6f) halfX = (0.5f * _fill) / Mathf.Abs(k);
+
+            return new Vector2(halfX, halfZ);
+        }
+
         public void SetTarget(Transform t)
         {
             _static = false;
